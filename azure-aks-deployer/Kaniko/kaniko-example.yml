@@ -1,0 +1,28 @@
+# --- Variables ---
+  CLIENT_ID: $REGISTRY_USER
+  CLIENT_SECRET: $REGISTRY_PW
+  CI_REGISTRY: registry.example.org
+
+# --- Gitlab stage example ---
+example-stage:
+  tags: [in-docker]
+  image:
+    name: gcr.io/kaniko-project/executor:v1.6.0-debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CLIENT_ID\",\"password\":\"$CLIENT_SECRET\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination ${CI_REGISTRY}/image:$CI_COMMIT_SHORT_SHA
+
+# --- Github Action example --
+name: GitHub Actions Demo
+jobs:
+  kaniko:
+    name: Build and push image
+    runs-on: gcr.io/kaniko-project/executor:v1.6.0-debug
+    steps:
+      - name: Run Kaniko
+        run: |
+          mkdir -p /kaniko/.docker \
+          && echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CLIENT_ID\",\"password\":\"$CLIENT_SECRET\"}}}" > /kaniko/.docker/config.json \
+          && /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination ${CI_REGISTRY}/image:$CI_COMMIT_SHORT_SHA
